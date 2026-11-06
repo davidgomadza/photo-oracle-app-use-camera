@@ -883,4 +883,69 @@
     e.target.value = '';
   });
 
-  cameraBtn.addEventListener('click',
+  cameraBtn.addEventListener('click', openCamera);
+  cameraCancel.addEventListener('click', stopCamera);
+  cameraCapture.addEventListener('click', capturePhoto);
+
+  // Close modal on backdrop click (but not on inner content)
+  cameraModal.addEventListener('click', e => {
+    if (e.target === cameraModal) stopCamera();
+  });
+
+  voiceToggle.addEventListener('change', e => {
+    state.voiceOn = e.target.checked;
+    if (!state.voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+  });
+
+  agtToggle.addEventListener('change', e => {
+    state.agt = e.target.checked;
+  });
+
+  // Drag & drop
+  ['dragenter','dragover'].forEach(ev =>
+    dropzone.addEventListener(ev, e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    })
+  );
+  ['dragleave','dragend'].forEach(ev =>
+    dropzone.addEventListener(ev, e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    })
+  );
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+
+  // Paste an image straight from the clipboard
+  window.addEventListener('paste', e => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const it of items){
+      if (it.type.startsWith('image/')){
+        const f = it.getAsFile();
+        if (f){ loadFile(f); break; }
+      }
+    }
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    if (e.key === '1'){ e.preventDefault(); runScan('birth'); }
+    if (e.key === '2'){ e.preventDefault(); runScan('death'); }
+    if (e.key === 'Escape' && state.cameraActive) stopCamera();
+  });
+
+  // Stop camera if page unloads
+  window.addEventListener('beforeunload', stopCamera);
+
+  updateButtons();
+})();
+</script>
+</body>
+</html>
